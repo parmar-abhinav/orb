@@ -80,6 +80,7 @@ export interface IEdge<N extends INodeBase, E extends IEdgeBase> {
   isSelected(): boolean;
   isHovered(): boolean;
   clearState(): void;
+  setState(state: number): void;
   isLoopback(): boolean;
   isStraight(): boolean;
   isCurved(): boolean;
@@ -116,7 +117,7 @@ export class EdgeFactory {
       startNode: edge.startNode,
       endNode: edge.endNode,
     });
-    newEdge.state = edge.state;
+    newEdge.setState(edge.state);
     newEdge.style = edge.style;
 
     return newEdge;
@@ -179,7 +180,11 @@ abstract class Edge<N extends INodeBase, E extends IEdgeBase> implements IEdge<N
   }
 
   clearState(): void {
-    this.state = GraphObjectState.NONE;
+    this.setState(GraphObjectState.NONE);
+  }
+
+  setState(state: number): void {
+    this.state = state;
   }
 
   isLoopback(): boolean {

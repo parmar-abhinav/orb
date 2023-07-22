@@ -73,6 +73,7 @@ export interface INode<N extends INodeBase, E extends IEdgeBase> {
   readonly id: any;
   clearPosition(): void;
   getCenter(): IPosition;
+  setState(state: number): void;
   getRadius(): number;
   getBorderedRadius(): number;
   getBoundingBox(): IRectangle;
@@ -146,6 +147,10 @@ export class Node<N extends INodeBase, E extends IEdgeBase> implements INode<N, 
       return { x: 0, y: 0 };
     }
     return { x: this.position.x, y: this.position.y };
+  }
+
+  setState(state: number): void {
+    this.state = state;
   }
 
   getRadius(): number {
@@ -242,7 +247,7 @@ export class Node<N extends INodeBase, E extends IEdgeBase> implements INode<N, 
   }
 
   clearState(): void {
-    this.state = GraphObjectState.NONE;
+    this.setState(GraphObjectState.NONE);
   }
 
   getDistanceToBorder(): number {

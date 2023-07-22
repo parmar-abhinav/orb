@@ -438,7 +438,7 @@ export class Graph<N extends INodeBase, E extends IEdgeBase> implements IGraph<N
         startNode,
         endNode,
       });
-      edge.state = existingEdge.state;
+      edge.setState(existingEdge.state);
       edge.style = existingEdge.style;
       newEdges.push(edge);
     }
