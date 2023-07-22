@@ -5,6 +5,7 @@ import { IGraphStyle } from './style';
 import { ImageHandler } from '../services/images';
 import { getEdgeOffsets } from './topology';
 import { IEntityState, EntityState } from '../utils/entity.utils';
+import { ISetStateOptions } from './state';
 
 export interface IGraphData<N extends INodeBase, E extends IEdgeBase> {
   nodes: N[];
@@ -350,10 +351,17 @@ export class Graph<N extends INodeBase, E extends IEdgeBase> implements IGraph<N
     return nearestEdge;
   }
 
+  // Callback function to be passed to each Node and Edge instance
+  private _onStateChange = (options?: ISetStateOptions): void => {
+    if(options?.isSingle) {
+      this._clearAllState();
+    }
+  }
+
   private _insertNodes(nodes: N[]) {
     const newNodes: INode<N, E>[] = new Array<INode<N, E>>(nodes.length);
     for (let i = 0; i < nodes.length; i++) {
-      newNodes[i] = NodeFactory.create<N, E>({ data: nodes[i] }, { onLoadedImage: () => this._onLoadedImages?.() });
+      newNodes[i] = NodeFactory.create<N, E>({ data: nodes[i] }, this._onStateChange, { onLoadedImage: () => this._onLoadedImages?.() });
     }
     this._nodes.setMany(newNodes);
   }
@@ -377,6 +385,14 @@ export class Graph<N extends INodeBase, E extends IEdgeBase> implements IGraph<N
     this._edges.setMany(newEdges);
   }
 
+  private _clearAllState(): void {
+    const nodes = this.getNodes();
+    const edges = this.getEdges();
+
+    nodes.forEach(node => node.clearState());
+    edges.forEach(edge => edge.clearState());
+  }
+
   private _upsertNodes(nodes: N[]) {
     const newNodes: INode<N, E>[] = [];
     for (let i = 0; i < nodes.length; i++) {
@@ -386,7 +402,7 @@ export class Graph<N extends INodeBase, E extends IEdgeBase> implements IGraph<N
         continue;
       }
 
-      newNodes.push(NodeFactory.create<N, E>({ data: nodes[i] }, { onLoadedImage: () => this._onLoadedImages?.() }));
+      newNodes.push(NodeFactory.create<N, E>({ data: nodes[i] }, this._onStateChange, { onLoadedImage: () => this._onLoadedImages?.() }));
     }
     this._nodes.setMany(newNodes);
   }

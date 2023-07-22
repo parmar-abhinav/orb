@@ -1,7 +1,7 @@
 import { IEdge, IEdgeBase } from './edge';
 import { Color, IPosition, IRectangle, isPointInRectangle } from '../common';
 import { ImageHandler } from '../services/images';
-import { GraphObjectState } from './state';
+import { GraphObjectState, ISetStateOptions } from './state';
 
 /**
  * Node baseline object with required fields
@@ -107,9 +107,10 @@ export interface INodeSettings {
 export class NodeFactory {
   static create<N extends INodeBase, E extends IEdgeBase>(
     data: INodeData<N>,
+    onStateChange: (options?: ISetStateOptions) => void,
     settings?: Partial<INodeSettings>,
   ): INode<N, E> {
-    return new Node<N, E>(data, settings);
+    return new Node<N, E>(data, onStateChange, settings);
   }
 }
 
@@ -127,12 +128,14 @@ export class Node<N extends INodeBase, E extends IEdgeBase> implements INode<N, 
   private readonly _inEdgesById: { [id: number]: IEdge<N, E> } = {};
   private readonly _outEdgesById: { [id: number]: IEdge<N, E> } = {};
   private readonly _onLoadedImage?: () => void;
+  private readonly _onStateChange: (options?: ISetStateOptions) => void;
 
-  constructor(data: INodeData<N>, settings?: Partial<INodeSettings>) {
+  constructor(data: INodeData<N>, onStateChange: (options?: ISetStateOptions) => void, settings?: Partial<INodeSettings>) {
     this.id = data.data.id;
     this.data = data.data;
     this.position = { id: this.id };
     this._onLoadedImage = settings?.onLoadedImage;
+    this._onStateChange = onStateChange;
   }
 
   clearPosition() {
@@ -149,8 +152,14 @@ export class Node<N extends INodeBase, E extends IEdgeBase> implements INode<N, 
     return { x: this.position.x, y: this.position.y };
   }
 
-  setState(state: number): void {
-    this.state = state;
+  setState(state: number, options?: ISetStateOptions): void {
+    if(options?.isSingle) {
+      this.setSingleState(state);
+    } else if(options?.isToggle) {
+      this.toggleState(state);
+    } else {
+      this.state = state;
+    }
   }
 
   getRadius(): number {
@@ -370,5 +379,18 @@ export class Node<N extends INodeBase, E extends IEdgeBase> implements INode<N, 
 
   protected _isPointInBoundingBox(point: IPosition): boolean {
     return isPointInRectangle(this.getBoundingBox(), point);
+  }
+
+  private toggleState(state: number): void {
+    if (this.state === state) {
+      this.clearState();
+    } else {
+      this.setState(state);
+    }
+  }
+  
+  private setSingleState(state: number, options?: ISetStateOptions): void {
+    this._onStateChange(options);
+    this.setState(state);
   }
 }
