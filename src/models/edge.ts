@@ -187,10 +187,8 @@ abstract class Edge<N extends INodeBase, E extends IEdgeBase> implements IEdge<N
   }
 
   setState(state: number, options?: ISetStateOptions): void {
-    if(options?.isSingle) {
-      this.setSingleState(state);
-    } else if(options?.isToggle) {
-      this.toggleState(state);
+    if(options) {
+      this._onStateChange(this, state, options);
     } else {
       this.state = state;
     }
@@ -269,19 +267,6 @@ abstract class Edge<N extends INodeBase, E extends IEdgeBase> implements IEdge<N
     }
 
     return color;
-  }
-
-  private toggleState(state: number): void {
-    if (this.state === state) {
-      this.clearState();
-    } else {
-      this.setState(state);
-    }
-  }
-  
-  private setSingleState(state: number, options?: ISetStateOptions): void {
-    this._onStateChange(this, state, options);
-    this.setState(state);
   }
 }
 
