@@ -1,5 +1,5 @@
 import { INodeBase, INode } from './node';
-import { GraphObjectState } from './state';
+import { GraphObjectState, ISetStateOptions } from './state';
 import { Color, IPosition, ICircle, getDistanceToLine } from '../common';
 
 const CURVED_CONTROL_POINT_OFFSET_MIN_SIZE = 4;
@@ -93,22 +93,23 @@ export interface IEdge<N extends INodeBase, E extends IEdgeBase> {
 }
 
 export class EdgeFactory {
-  static create<N extends INodeBase, E extends IEdgeBase>(data: IEdgeData<N, E>): IEdge<N, E> {
+  static create<N extends INodeBase, E extends IEdgeBase>(data: IEdgeData<N, E>, onStateChange: (options?: ISetStateOptions) => void): IEdge<N, E> {
     const type = getEdgeType(data);
     switch (type) {
       case EdgeType.STRAIGHT:
-        return new EdgeStraight(data);
+        return new EdgeStraight(data, onStateChange);
       case EdgeType.LOOPBACK:
-        return new EdgeLoopback(data);
+        return new EdgeLoopback(data, onStateChange);
       case EdgeType.CURVED:
-        return new EdgeCurved(data);
+        return new EdgeCurved(data, onStateChange);
       default:
-        return new EdgeStraight(data);
+        return new EdgeStraight(data, onStateChange);
     }
   }
 
   static copy<N extends INodeBase, E extends IEdgeBase>(
     edge: IEdge<N, E>,
+    onStateChange: (options?: ISetStateOptions) => void, 
     data?: Omit<IEdgeData<N, E>, 'data' | 'startNode' | 'endNode'>,
   ): IEdge<N, E> {
     const newEdge = EdgeFactory.create<N, E>({
@@ -116,7 +117,7 @@ export class EdgeFactory {
       offset: data?.offset !== undefined ? data.offset : edge.offset,
       startNode: edge.startNode,
       endNode: edge.endNode,
-    });
+    }, onStateChange);
     newEdge.setState(edge.state);
     newEdge.style = edge.style;
 
@@ -141,13 +142,15 @@ abstract class Edge<N extends INodeBase, E extends IEdgeBase> implements IEdge<N
   public position: IEdgePosition;
 
   private _type: EdgeType = EdgeType.STRAIGHT;
+  private readonly _onStateChange: (options?: ISetStateOptions) => void;
 
-  constructor(data: IEdgeData<N, E>) {
+  constructor(data: IEdgeData<N, E>, onStateChange: (options?: ISetStateOptions) => void) {
     this.id = data.data.id;
     this.data = data.data;
     this.offset = data.offset ?? 0;
     this.startNode = data.startNode;
     this.endNode = data.endNode;
+    this._onStateChange = onStateChange;
     this._type = getEdgeType(data);
 
     this.position = { id: this.id, source: this.startNode.id, target: this.endNode.id };
@@ -183,8 +186,14 @@ abstract class Edge<N extends INodeBase, E extends IEdgeBase> implements IEdge<N
     this.setState(GraphObjectState.NONE);
   }
 
-  setState(state: number): void {
-    this.state = state;
+  setState(state: number, options?: ISetStateOptions): void {
+    if(options?.isSingle) {
+      this.setSingleState(state);
+    } else if(options?.isToggle) {
+      this.toggleState(state);
+    } else {
+      this.state = state;
+    }
   }
 
   isLoopback(): boolean {
@@ -260,6 +269,19 @@ abstract class Edge<N extends INodeBase, E extends IEdgeBase> implements IEdge<N
     }
 
     return color;
+  }
+
+  private toggleState(state: number): void {
+    if (this.state === state) {
+      this.clearState();
+    } else {
+      this.setState(state);
+    }
+  }
+  
+  private setSingleState(state: number, options?: ISetStateOptions): void {
+    this._onStateChange(options);
+    this.setState(state);
   }
 }
 

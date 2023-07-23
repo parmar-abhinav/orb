@@ -378,7 +378,7 @@ export class Graph<N extends INodeBase, E extends IEdgeBase> implements IGraph<N
             data: edges[i],
             startNode,
             endNode,
-          }),
+          }, this._onStateChange),
         );
       }
     }
@@ -425,7 +425,7 @@ export class Graph<N extends INodeBase, E extends IEdgeBase> implements IGraph<N
             data: newEdgeData,
             startNode,
             endNode,
-          });
+          }, this._onStateChange);
           newEdges.push(edge);
         }
         continue;
@@ -453,7 +453,7 @@ export class Graph<N extends INodeBase, E extends IEdgeBase> implements IGraph<N
         offset: existingEdge.offset,
         startNode,
         endNode,
-      });
+      }, this._onStateChange);
       edge.setState(existingEdge.state);
       edge.style = existingEdge.style;
       newEdges.push(edge);
@@ -511,7 +511,7 @@ export class Graph<N extends INodeBase, E extends IEdgeBase> implements IGraph<N
     for (let i = 0; i < edgeOffsets.length; i++) {
       const edge = graphEdges[i];
       const edgeOffset = edgeOffsets[i];
-      updatedEdges[i] = EdgeFactory.copy(edge, { offset: edgeOffset });
+      updatedEdges[i] = EdgeFactory.copy(edge, this._onStateChange, { offset: edgeOffset });
     }
     this._edges.setMany(updatedEdges);
   }
