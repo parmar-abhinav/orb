@@ -93,7 +93,7 @@ export interface IEdge<N extends INodeBase, E extends IEdgeBase> {
 }
 
 export class EdgeFactory {
-  static create<N extends INodeBase, E extends IEdgeBase>(data: IEdgeData<N, E>, onStateChange: (options?: ISetStateOptions) => void): IEdge<N, E> {
+  static create<N extends INodeBase, E extends IEdgeBase>(data: IEdgeData<N, E>, onStateChange: (graphObject: INode<N, E> | IEdge<N, E>, state:number, options?: ISetStateOptions) => void): IEdge<N, E> {
     const type = getEdgeType(data);
     switch (type) {
       case EdgeType.STRAIGHT:
@@ -109,7 +109,7 @@ export class EdgeFactory {
 
   static copy<N extends INodeBase, E extends IEdgeBase>(
     edge: IEdge<N, E>,
-    onStateChange: (options?: ISetStateOptions) => void, 
+    onStateChange: (graphObject: INode<N, E> | IEdge<N, E>, state:number, options?: ISetStateOptions) => void, 
     data?: Omit<IEdgeData<N, E>, 'data' | 'startNode' | 'endNode'>,
   ): IEdge<N, E> {
     const newEdge = EdgeFactory.create<N, E>({
@@ -142,9 +142,9 @@ abstract class Edge<N extends INodeBase, E extends IEdgeBase> implements IEdge<N
   public position: IEdgePosition;
 
   private _type: EdgeType = EdgeType.STRAIGHT;
-  private readonly _onStateChange: (options?: ISetStateOptions) => void;
+  private readonly _onStateChange: (graphObject: INode<N, E> | IEdge<N, E>, state:number, options?: ISetStateOptions) => void;
 
-  constructor(data: IEdgeData<N, E>, onStateChange: (options?: ISetStateOptions) => void) {
+  constructor(data: IEdgeData<N, E>, onStateChange: (graphObject: INode<N, E> | IEdge<N, E>, state:number, options?: ISetStateOptions) => void) {
     this.id = data.data.id;
     this.data = data.data;
     this.offset = data.offset ?? 0;
@@ -280,7 +280,7 @@ abstract class Edge<N extends INodeBase, E extends IEdgeBase> implements IEdge<N
   }
   
   private setSingleState(state: number, options?: ISetStateOptions): void {
-    this._onStateChange(options);
+    this._onStateChange(this, state, options);
     this.setState(state);
   }
 }

@@ -352,10 +352,39 @@ export class Graph<N extends INodeBase, E extends IEdgeBase> implements IGraph<N
   }
 
   // Callback function to be passed to each Node and Edge instance
-  private _onStateChange = (options?: ISetStateOptions): void => {
-    if(options?.isSingle) {
-      this._clearAllState();
+  private _onStateChange = (
+    graphObject: INode<N, E> | IEdge<N, E>,
+    state: number,
+    options?: ISetStateOptions
+  ): void => {
+    if (options?.isSingle) {
+      this.setSingleState(graphObject, state);
+    } else if(options?.isToggle) {
+      this.toggleState(graphObject, state);
     }
+  };
+
+  private toggleState(graphObject: INode<N, E> | IEdge<N, E>, state: number): void {
+    if (graphObject.state === state) {
+      graphObject.clearState();
+    } else {
+      graphObject.setState(state);
+    }
+  }
+
+  private setSingleState(
+    graphObject: INode<N, E> | IEdge<N, E>,
+    state: number
+  ): void {
+    const type = graphObject instanceof Node ? "node" : "edge";
+    const graphObjects: (INode<N, E> | IEdge<N, E>)[] =
+      type === "node"
+        ? this.getNodes((node) => node.state === state)
+        : this.getEdges((edge) => edge.state === state);
+    graphObjects.forEach((object) => {
+      object.clearState();
+    });
+    graphObject.setState(state);
   }
 
   private _insertNodes(nodes: N[]) {
@@ -383,14 +412,6 @@ export class Graph<N extends INodeBase, E extends IEdgeBase> implements IGraph<N
       }
     }
     this._edges.setMany(newEdges);
-  }
-
-  private _clearAllState(): void {
-    const nodes = this.getNodes();
-    const edges = this.getEdges();
-
-    nodes.forEach(node => node.clearState());
-    edges.forEach(edge => edge.clearState());
   }
 
   private _upsertNodes(nodes: N[]) {
