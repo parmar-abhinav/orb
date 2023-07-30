@@ -34,6 +34,10 @@ export interface IGraphInteractionSettings {
   };
 }
 
+const DEFAULT_ZOOM_IN_FACTOR = 1.2;
+const DEFAULT_ZOOM_OUT_FACTOR = 0.8;
+const DEFAULT_DRAGGING_FACTOR = 25;
+
 export interface IOrbViewSettings<N extends INodeBase, E extends IEdgeBase> {
   getPosition?(node: INode<N, E>): IPosition | undefined;
   simulation: Partial<ID3SimulatorEngineSettings>;
@@ -108,9 +112,9 @@ export class OrbView<N extends INodeBase, E extends IEdgeBase> implements IOrbVi
         ...settings?.interaction,
         keyboard: {
           isKeyboardEnabled: false,
-          zoomInFactor: 1.2,
-          zoomOutFactor: 0.8,
-          draggingFactor: 25,
+          zoomInFactor: DEFAULT_ZOOM_IN_FACTOR,
+          zoomOutFactor: DEFAULT_ZOOM_OUT_FACTOR,
+          draggingFactor: DEFAULT_DRAGGING_FACTOR,
           ...settings?.interaction?.keyboard,
         },
       },
