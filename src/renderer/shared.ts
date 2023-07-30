@@ -59,6 +59,16 @@ export interface IRenderer<N extends INodeBase, E extends IEdgeBase> extends IEm
 
   getFitZoomTransform(graph: IGraph<N, E>): ZoomTransform;
 
+  getZoomTransform(zoomFactor: number): ZoomTransform;
+
+  getDragLeftTransform(zoomFactor: number): ZoomTransform;
+
+  getDragRightTransform(zoomFactor: number): ZoomTransform;
+
+  getDragUpTransform(zoomFactor: number): ZoomTransform;
+
+  getDragDownTransform(zoomFactor: number): ZoomTransform;
+
   getSimulationPosition(canvasPoint: IPosition): IPosition;
 
   /**
